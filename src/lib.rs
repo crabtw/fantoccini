@@ -1547,6 +1547,32 @@ impl Element {
             .and_then(move |(c, v)| c.parse_lookup(v).map(move |e| Element { c, e }))
             .and_then(move |e| e.click())
     }
+
+    /// Find a descendant of this element.
+    pub fn find(
+        self,
+        search: Locator,
+    ) -> impl Future<Item = Element, Error = error::CmdError> {
+        self.c
+            .issue_wd_cmd(WebDriverCommand::FindElementElement(self.e, search.into()))
+            .and_then(|(this, res)| {
+                let e = this.parse_lookup(res);
+                e.map(move |e| Element { c: this, e: e })
+            })
+    }
+
+    /// Find descendants of this element.
+    pub fn find_all(
+        self,
+        search: Locator,
+    ) -> impl Future<Item = Vec<Element>, Error = error::CmdError> {
+        self.c
+            .issue_wd_cmd(WebDriverCommand::FindElementElements(self.e, search.into()))
+            .and_then(|(this, res)| {
+                let array = this.parse_lookup_all(res)?;
+                Ok(array.into_iter().map(|e| Element { c: this.dup(), e: e }).collect())
+            })
+    }
 }
 
 impl rustc_serialize::json::ToJson for Element {
