@@ -543,6 +543,9 @@ impl Client {
             }
             WebDriverCommand::SetWindowRect(..) => base.join("window/rect"),
             WebDriverCommand::GetWindowRect => base.join("window/rect"),
+            WebDriverCommand::MaximizeWindow => base.join("window/maximize"),
+            WebDriverCommand::MinimizeWindow => base.join("window/minimize"),
+            WebDriverCommand::FullscreenWindow => base.join("window/fullscreen"),
             WebDriverCommand::TakeScreenshot => base.join("screenshot"),
             _ => unimplemented!(),
         }
@@ -601,7 +604,10 @@ impl Client {
             }
             WebDriverCommand::ElementClick(..)
             | WebDriverCommand::GoBack
-            | WebDriverCommand::Refresh => {
+            | WebDriverCommand::Refresh
+            | WebDriverCommand::MaximizeWindow
+            | WebDriverCommand::MinimizeWindow
+            | WebDriverCommand::FullscreenWindow => {
                 body = Some("{}".to_string());
                 method = Method::Post;
             }
@@ -1019,6 +1025,27 @@ impl Client {
                 }
                 _ => Err(error::CmdError::NotW3C(v)),
             })
+    }
+
+    /// Maximize current window.
+    pub fn maximize(&self) -> impl Future<Item = Self, Error = error::CmdError> + 'static {
+        self.dup()
+            .issue_wd_cmd(WebDriverCommand::MaximizeWindow)
+            .map(|(this, _)| this)
+    }
+
+    /// Minimize current window.
+    pub fn minimize(&self) -> impl Future<Item = Self, Error = error::CmdError> + 'static {
+        self.dup()
+            .issue_wd_cmd(WebDriverCommand::MinimizeWindow)
+            .map(|(this, _)| this)
+    }
+
+    /// Fullscreen current window.
+    pub fn fullscreen(&self) -> impl Future<Item = Self, Error = error::CmdError> + 'static {
+        self.dup()
+            .issue_wd_cmd(WebDriverCommand::FullscreenWindow)
+            .map(|(this, _)| this)
     }
 
     /// Navigate directly to the given URL.
